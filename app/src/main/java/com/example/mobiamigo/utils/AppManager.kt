@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
-import com.example.mobiamigo.data.AppItem // ¡Importante! Asegúrate de que esta ruta sea correcta.
+import com.example.mobiamigo.data.AppItem
 
 object AppManager {
     fun getInstalledApps(context: Context): List<AppItem> {
