@@ -1,6 +1,5 @@
 package com.example.mobiamigo
 
-import android.content.pm.ResolveInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,13 +7,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.mobiamigo.data.AppItem
 import com.example.mobiamigo.screens.AddAppScreen
 import com.example.mobiamigo.screens.HomeScreen
 import com.example.mobiamigo.screens.LoginScreen
@@ -40,18 +40,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val selectedApps = remember { mutableStateListOf<ResolveInfo>() }
+    val selectedApps = remember { mutableStateListOf<AppItem>() }
 
     NavHost(navController = navController, startDestination = "login") {
+
         composable("login") {
             LoginScreen(navController = navController)
         }
+
         composable("home") {
             HomeScreen(
                 navController = navController,
                 selectedApps = selectedApps
             )
         }
+
         composable("add_app") {
             AddAppScreen(
                 navController = navController,

@@ -1,89 +1,113 @@
 package com.example.mobiamigo.screens
 
-import android.content.Intent
-import android.content.pm.ResolveInfo
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.graphics.drawable.toBitmap
 import androidx.navigation.NavController
+import com.example.mobiamigo.data.AppItem
+import com.example.mobiamigo.utils.AppManager
+import androidx.core.graphics.drawable.toBitmap
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
-// --- Pantalla 3: Agregar Aplicaciones desde el Dispositivo ---
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAppScreen(
     navController: NavController,
-    onAppsSelected: (List<ResolveInfo>) -> Unit,
-    currentlySelected: List<ResolveInfo>
+    onAppsSelected: (List<AppItem>) -> Unit,
+    currentlySelected: List<AppItem>
 ) {
     val context = LocalContext.current
-    val packageManager = context.packageManager
+    val allApps = remember { AppManager.getInstalledApps(context) }
+    val selectedApps = remember {
+        mutableStateListOf(*currentlySelected.toTypedArray())
+    }
 
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Seleccionar Aplicaciones", style = MaterialTheme.typography.titleLarge) },
+                actions = {
 
-    val intent = Intent(Intent.ACTION_MAIN, null).addCategory(Intent.CATEGORY_LAUNCHER)
-    val allApps = packageManager.queryIntentActivities(intent, 0)
+                    Button(
+                        onClick = {
+                            onAppsSelected(selectedApps.toList())
+                        },
 
-    val selectedAppsSet = remember { mutableStateOf(currentlySelected.toSet()) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Lista de apps para seleccionar
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(allApps.sortedBy { it.loadLabel(packageManager).toString() }) { app ->
-                val appName = app.loadLabel(packageManager).toString()
-                val appIcon = app.loadIcon(packageManager).toBitmap().asImageBitmap()
-                val isSelected = selectedAppsSet.value.any { it.activityInfo.packageName == app.activityInfo.packageName }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            val currentSet = selectedAppsSet.value.toMutableSet()
-                            if (isSelected) {
-                                currentSet.removeAll { it.activityInfo.packageName == app.activityInfo.packageName }
-                            } else {
-                                currentSet.add(app)
-                            }
-                            selectedAppsSet.value = currentSet
-                        }
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        bitmap = appIcon,
-                        contentDescription = appName,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(appName, modifier = Modifier.weight(1f), fontSize = 18.sp)
-                    Checkbox(
-                        checked = isSelected,
-                        onCheckedChange = null // La lógica está en el `clickable` del Row
-                    )
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Text("Confirmar", style = MaterialTheme.typography.titleMedium)
+                    }
                 }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(paddingValues)
+        ) {
+            items(allApps) { app ->
+                val isSelected = selectedApps.any { it.packageName == app.packageName }
+
+                AppSelectionItem(
+                    app = app,
+                    isSelected = isSelected,
+                    onToggle = {
+                        if (isSelected) {
+                            selectedApps.removeAll { it.packageName == app.packageName }
+                        } else {
+                            selectedApps.add(app)
+                        }
+                    }
+                )
+                Divider()
             }
         }
+    }
+}
 
-        Button(
-            onClick = { onAppsSelected(selectedAppsSet.value.toList()) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(50.dp)
-        ) {
-            Text("Guardar Selección", fontSize = 18.sp)
+
+@Composable
+fun AppSelectionItem(app: AppItem, isSelected: Boolean, onToggle: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(24.dp)
+            .semantics { contentDescription = "Seleccionar ${app.label}" },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        app.icon?.let { drawable ->
+            Image(
+                bitmap = drawable.toBitmap().asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.size(64.dp)
+            )
         }
+
+        Spacer(Modifier.width(20.dp))
+
+        Text(
+            text = app.label,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.weight(1f)
+        )
+
+        Checkbox(
+            checked = isSelected,
+            onCheckedChange = { onToggle() },
+            modifier = Modifier.size(48.dp)
+        )
     }
 }
