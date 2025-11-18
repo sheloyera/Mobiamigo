@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "530175970173",
+    "project_id": "moviamigo",
+    "storage_bucket": "moviamigo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:530175970173:android:56181956a3ded5d6f6da14",
+        "android_client_info": {
+          "package_name": "com.example.mobiamigo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4Jh3SW8QWhjE3yCMnIhOSW4mBrLEnTds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
