@@ -1,6 +1,9 @@
 pluginManagement {
     repositories {
         google {
+            google()
+            mavenCentral()
+            gradlePluginPortal()
             content {
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
@@ -21,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Mobiamigo"
 include(":app")
- 
+
+

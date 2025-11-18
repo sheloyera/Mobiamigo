@@ -34,7 +34,7 @@ fun esRutValido(rutCompleto: String): Boolean {
     return dvCalculado == dvEsperado
 }
 
-// La función formatRut ya no se usará en el LoginScreen, pero la dejo por si acaso.
+
 fun formatRut(rutLimpio: String): String {
     return rutLimpio
 }

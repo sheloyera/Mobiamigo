@@ -1,31 +1,33 @@
 package com.example.mobiamigo.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.mobiamigo.ui.theme.MobiamigoTheme
-import com.example.mobiamigo.utils.esRutValido
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    var rutInput by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
 
-    val maxRutLength = 10
+    val auth = FirebaseAuth.getInstance()
+    var rut by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Convierte el RUT en un "email"
+    fun rutToEmail(rut: String): String =
+        rut.replace(".", "").replace("-", "").lowercase() + "@rut.cl"
+
+    val showRutError = rut.isNotEmpty() && !isValidRut(rut)
 
     Column(
         modifier = Modifier
@@ -37,42 +39,56 @@ fun LoginScreen(navController: NavController) {
         Text("MobiAmigo", fontSize = 34.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(40.dp))
 
+        // RUT
         OutlinedTextField(
-            value = rutInput,
-            onValueChange = { newValue ->
+            value = rut,
+            onValueChange = { rut = it },
+            label = { Text("RUT") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = showRutError
+        )
+        if (showRutError) {
+            Text(
+                text = "RUT inválido",
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(top = 2.dp)
+            )
+        }
 
-                val filteredValue = newValue.filter {
-                    it.isDigit() || it == '-' || it.equals('k', ignoreCase = true)
-                }.uppercase()
+        Spacer(modifier = Modifier.height(16.dp))
 
-
-                rutInput = if (filteredValue.length <= maxRutLength) filteredValue else filteredValue.substring(0, maxRutLength)
-
-                errorMessage = ""
-            },
-            label = { Text("Ingresa tu RUT (ej: 12345678-K)") },
-
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        // Contraseña
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
-        if (errorMessage.isNotEmpty()) {
-            Text(errorMessage, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                if (rutInput.isEmpty()) {
-                    navController.navigate("home")
-                } else if (esRutValido(rutInput)) {
-
-                    errorMessage = " "
-
-                    navController.navigate("home")
-                } else {
-                    errorMessage = "RUT Inválido o Debe incluir el guion (ej: 12345678-K)."
+                if (!isValidRut(rut)) {
+                    Toast.makeText(context, "RUT inválido", Toast.LENGTH_LONG).show()
+                    return@Button
                 }
+
+                val email = rutToEmail(rut)
+
+                auth.signInWithEmailAndPassword(email, password)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Bienvenido!", Toast.LENGTH_LONG).show()
+                        navController.navigate("home")
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Datos incorrectos", Toast.LENGTH_LONG).show()
+                    }
+
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,16 +99,45 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        TextButton(onClick = { navController.navigate("register") }) {
+            Text("Crear cuenta", fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
         TextButton(onClick = { navController.navigate("home") }) {
-            Text("Continuar sin iniciar sesión", fontSize = 16.sp)
+            Text("Ingresar sin registrarse", fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = { navController.navigate("home") }) {
+            Text("Ingresar como asistente", fontSize = 16.sp)
         }
     }
 }
+//   Validación del RUT
+fun isValidRut(rut: String): Boolean {
+    val cleanRut = rut.replace(".", "").replace("-", "").uppercase()
+    if (cleanRut.length < 2) return false
 
-@Preview(showBackground = true, device = "id:pixel_4")
-@Composable
-fun LoginScreenPreview() {
-    MobiamigoTheme {
-        LoginScreen(rememberNavController())
+    val body = cleanRut.dropLast(1)
+    val dv = cleanRut.last()
+
+    if (!body.all { it.isDigit() }) return false
+
+    var sum = 0
+    var multiplier = 2
+    for (digit in body.reversed()) {
+        sum += (digit.toString().toInt() * multiplier)
+        multiplier = if (multiplier < 7) multiplier + 1 else 2
     }
+
+    val expectedDv = 11 - (sum % 11)
+    val result = when (expectedDv) {
+        11 -> '0'
+        10 -> 'K'
+        else -> expectedDv.toString().first()
+    }
+
+    return dv == result
 }
