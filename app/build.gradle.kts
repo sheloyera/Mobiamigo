@@ -53,6 +53,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        compose = true // Asegúrate de tener esto activado también para Compose
     }
 
     packaging {
@@ -76,9 +77,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Firebase BOM (recomendado)
+    // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
-
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")

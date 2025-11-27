@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.mobiamigo.utils.isValidRut
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.text.lowercase
@@ -91,7 +92,7 @@ fun RegisterScreen(navController: NavController) {
                     .addOnSuccessListener { result ->
                         val uid = result.user!!.uid
 
-                        // Guardar información adicional
+
                         db.collection("usuarios").document(uid).set(
                             mapOf("rut" to rut)
                         )
@@ -112,5 +113,7 @@ fun RegisterScreen(navController: NavController) {
         }
     }
 }
+
+
 
 

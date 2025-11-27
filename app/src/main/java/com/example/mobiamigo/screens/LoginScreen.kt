@@ -12,6 +12,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.mobiamigo.utils.isValidRut
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -23,7 +24,6 @@ fun LoginScreen(navController: NavController) {
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // Convierte el RUT en un "email"
     fun rutToEmail(rut: String): String =
         rut.replace(".", "").replace("-", "").lowercase() + "@rut.cl"
 
@@ -39,7 +39,7 @@ fun LoginScreen(navController: NavController) {
         Text("MobiAmigo", fontSize = 34.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(40.dp))
 
-        // RUT
+
         OutlinedTextField(
             value = rut,
             onValueChange = { rut = it },
@@ -60,7 +60,6 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contraseña
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -114,30 +113,4 @@ fun LoginScreen(navController: NavController) {
             Text("Ingresar como asistente", fontSize = 16.sp)
         }
     }
-}
-//   Validación del RUT
-fun isValidRut(rut: String): Boolean {
-    val cleanRut = rut.replace(".", "").replace("-", "").uppercase()
-    if (cleanRut.length < 2) return false
-
-    val body = cleanRut.dropLast(1)
-    val dv = cleanRut.last()
-
-    if (!body.all { it.isDigit() }) return false
-
-    var sum = 0
-    var multiplier = 2
-    for (digit in body.reversed()) {
-        sum += (digit.toString().toInt() * multiplier)
-        multiplier = if (multiplier < 7) multiplier + 1 else 2
-    }
-
-    val expectedDv = 11 - (sum % 11)
-    val result = when (expectedDv) {
-        11 -> '0'
-        10 -> 'K'
-        else -> expectedDv.toString().first()
-    }
-
-    return dv == result
 }
