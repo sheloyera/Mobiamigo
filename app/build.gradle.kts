@@ -42,18 +42,24 @@ android {
         }
     }
 
+    // --- AQUÍ ESTÁ EL CAMBIO IMPORTANTE ---
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        // Usamos Java 8 para máxima compatibilidad con el desugaring
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+
+        // ESTA LÍNEA ES LA QUE ARREGLA EL CRASH DEL CALENDARIO:
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
+    // --------------------------------------
 
     buildFeatures {
         buildConfig = true
-        compose = true // Asegúrate de tener esto activado también para Compose
+        compose = true
     }
 
     packaging {
@@ -64,6 +70,10 @@ android {
 }
 
 dependencies {
+
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -19,6 +19,8 @@ import com.example.mobiamigo.screens.AddAppScreen
 import com.example.mobiamigo.screens.HomeScreen
 import com.example.mobiamigo.screens.LoginScreen
 import com.example.mobiamigo.screens.RegisterScreen
+import com.example.mobiamigo.screens.CalendarioScreen
+import com.example.mobiamigo.screens.Evento // IMPORTANTE: Necesario para crear la lista aquí
 import com.example.mobiamigo.ui.theme.MobiamigoTheme
 
 class MainActivity : ComponentActivity() {
@@ -42,22 +44,22 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-
+    // Lista para las apps seleccionadas
     val selectedApps = remember { mutableStateListOf<AppItem>() }
 
-    NavHost(navController = navController, startDestination = "login") {
+    // --- NUEVO: Lista para los eventos del calendario (Persistencia) ---
+    // Al crearla aquí, los eventos no se borran cuando sales de la pantalla Calendario
+    val eventosGlobales = remember { mutableStateListOf<Evento>() }
 
+    NavHost(navController = navController, startDestination = "login") {
 
         composable("login") {
             LoginScreen(navController = navController)
         }
 
-
         composable("register") {
             RegisterScreen(navController = navController)
         }
-
-
 
         composable("home") {
             HomeScreen(
@@ -65,7 +67,6 @@ fun AppNavigation() {
                 selectedApps = selectedApps
             )
         }
-
 
         composable("add_app") {
             AddAppScreen(
@@ -77,6 +78,12 @@ fun AppNavigation() {
                 },
                 currentlySelected = selectedApps.toList()
             )
+        }
+
+        // --- RUTA MODIFICADA ---
+        composable("calendario") {
+            // Le pasamos la lista global para que guarde y lea los mismos datos siempre
+            CalendarioScreen(navController = navController, eventos = eventosGlobales)
         }
     }
 }

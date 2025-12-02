@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SupportAgent
@@ -67,14 +68,11 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
 
-
     val sharedPref = remember { context.getSharedPreferences("MobiAmigoPrefs", Context.MODE_PRIVATE) }
-
 
     var isTutorialCompleted by remember {
         mutableStateOf(sharedPref.getBoolean("is_tutorial_completed", false))
     }
-
 
     var showShowcase by remember { mutableStateOf(false) }
     var currentTutorialLevel by rememberSaveable { mutableStateOf<String?>(null) }
@@ -87,10 +85,10 @@ fun HomeScreen(
                 if (level == TUTORIAL_FULL || level == TUTORIAL_MEDIUM) {
                     showShowcase = true
                     if (level == TUTORIAL_MEDIUM) {
+                        // Si elige Medio, empezamos en el paso 2 (Calendario) saltando configuración básica
                         showcaseState.currentStep = 2
                     }
                 } else {
-
                     sharedPref.edit().putBoolean("is_tutorial_completed", true).apply()
                     isTutorialCompleted = true
                     currentTutorialLevel = TUTORIAL_COMPLETED
@@ -98,7 +96,6 @@ fun HomeScreen(
             }
         )
     }
-
 
     var selectedContacts by rememberSaveable { mutableStateOf(listOf<Pair<String, String>>()) }
     val contactLauncher = rememberLauncherForActivityResult(
@@ -111,14 +108,12 @@ fun HomeScreen(
         }
     }
 
-
     SimpleShowcase(
         state = showcaseState,
         isVisible = showShowcase,
         onFinished = {
             showShowcase = false
             currentTutorialLevel = TUTORIAL_COMPLETED
-
 
             sharedPref.edit().putBoolean("is_tutorial_completed", true).apply()
             isTutorialCompleted = true
@@ -129,10 +124,8 @@ fun HomeScreen(
                 topBar = {
                     CenterAlignedTopAppBar(
                         title = { Text("MobiAmigo") },
-
                         actions = {
                             IconButton(onClick = {
-
                                 isTutorialCompleted = false
                                 currentTutorialLevel = null
                                 showShowcase = false
@@ -154,11 +147,12 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // 1. Aplicaciones seleccionadas
                     items(selectedApps) { app ->
                         AppGridItem(app = app, onClick = { AppManager.launchApp(context, app) })
                     }
 
-
+                    // 2. Botón Añadir Apps (Paso 0)
                     item {
                         ActionGridItem(
                             icon = Icons.Default.Add,
@@ -169,7 +163,7 @@ fun HomeScreen(
                         )
                     }
 
-
+                    // 3. Botón Añadir Contacto (Paso 1)
                     item {
                         ActionGridItem(
                             icon = Icons.Default.Add,
@@ -183,17 +177,31 @@ fun HomeScreen(
                         )
                     }
 
+                    // 4. Botón Calendario (Paso 2 - NUEVO)
+                    item {
+                        ActionGridItem(
+                            icon = Icons.Default.CalendarMonth,
+                            label = "Calendario",
+                            description = "Calendario de eventos",
+                            modifier = Modifier.showcaseTarget(showcaseState, 2), // Aquí agregamos el target
+                            onClick = { navController.navigate("calendario") }
+                        )
+                    }
 
+                    // 5. Botón Asistencia IA (Paso 3 - ACTUALIZADO)
                     item {
                         ActionGridItem(
                             icon = Icons.Default.SupportAgent,
                             label = "Asistencia/IA",
-                            description = "Ayuda IA",
-                            modifier = Modifier.showcaseTarget(showcaseState, 2),
-                            onClick = { solicitarAsistenciaIA(context) }
+                            description = "Solicitar ayuda remota o con la Inteligencia Artificial",
+                            modifier = Modifier.showcaseTarget(showcaseState, 3), // Cambiado de 2 a 3
+                            onClick = {
+                                solicitarAsistenciaIA(context)
+                            }
                         )
                     }
 
+                    // 6. Lista de contactos agregados
                     items(selectedContacts) { (name, number) ->
                         ActionGridItem(
                             icon = Icons.Default.Person,
@@ -214,14 +222,15 @@ fun HomeScreen(
                 }
             }
 
-
+            // Lógica de textos del Tutorial
             if (showShowcase && showcaseState.currentStep != -1) {
                 val targetRect = showcaseState.targets[showcaseState.currentStep]
                 if (targetRect != null) {
                     val message = when(showcaseState.currentStep) {
                         0 -> "Toca aquí para agregar tus aplicaciones favoritas."
                         1 -> "Aquí puedes añadir contactos de emergencia."
-                        2 -> "¡Lo más importante! Toca aquí para pedir ayuda a la IA."
+                        2 -> "¡Nuevo! Usa el Calendario para agendar tus medicamentos y alarmas." // Mensaje nuevo
+                        3 -> "¡Lo más importante! Toca aquí para pedir ayuda a la IA." // Mensaje actualizado
                         else -> ""
                     }
                     TutorialTextBox(
@@ -235,6 +244,7 @@ fun HomeScreen(
         }
     }
 }
+
 @Composable
 fun TutorialTextBox(text: String, modifier: Modifier = Modifier) {
     Card(
@@ -292,7 +302,6 @@ fun AppGridItem(app: AppItem, onClick: () -> Unit) {
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
